@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: builder-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: builder
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      name: builder
+      labels:
+        app: builder
+    spec:
+      containers:
+      - image: rheamer/builder
+        name: builder
+        volumeMounts:
+          - mountPath: /build
+            name: buildata
+        args:
+        - /bin/sh
+        - -c
+        - git clone https://github.com/Rheamer/FileHoster.git; cd FileHoster; gradle --no-daemon --console=plain build; cp -r ./build ../target/; ls
+            
+      volumes:
+      - name: buildata
+        persistentVolumeClaim:
+          claimName: persistent-volume-claim
